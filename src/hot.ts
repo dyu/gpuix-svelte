@@ -7,15 +7,29 @@ import { watch } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { render } from './render.ts';
+import { set_remounting } from './renderer.ts';
 import type { AnyComponent, RenderOptions } from './types.ts';
 
 // Set by `plugin.ts`, since Bun keys ES modules by path alone and the `?v=N` below reaches nothing there.
 const INVALIDATE = Symbol.for('gpuix-svelte.invalidate');
 
-/** The newest `url` and the components under it; `.svelte.ts` modules keep their single instance. */
+/** The newest `url` and the components under it, for the caller to mount next; `.svelte.ts` modules keep their single instance. */
 export async function import_fresh(url: URL, version: number): Promise<Record<string, unknown>> {
 	(globalThis as Record<symbol, (() => void) | undefined>)[INVALIDATE]?.();
-	return import(`${url.href}?v=${version}`);
+	set_remounting(true);
+	try {
+		return (await import(`${url.href}?v=${version}`)) as Record<string, unknown>;
+	} catch (error) {
+		set_remounting(false);
+		throw error;
+	}
+}
+
+/** What a change under the entry's directory calls for; `compile.ts` never busts a package's specifiers, so a remount there would load the same code. */
+export function on_change(file: string): 'remount' | 'restart' | null {
+	if (/(^|[\\/])node_modules[\\/]/.test(file)) return null;
+	if (/\.[jt]s$/.test(file)) return 'restart';
+	return file.endsWith('.svelte') ? 'remount' : null;
 }
 
 /**
@@ -42,14 +56,15 @@ export async function render_hot(entry: string | URL, options: RenderOptions = {
 
 		// Modules (`.svelte.ts` state included) load once per process, which is what
 		// lets their state outlive a remount — so an edit there needs a restart.
-		if (/\.[jt]s$/.test(file) && !file.includes('node_modules')) {
+		const change = on_change(file);
+		if (change === 'restart') {
 			if (!stale.has(file)) {
 				stale.add(file);
 				console.warn(`[gpuix-svelte] ${file} changed — modules load once per process, restart to pick it up`);
 			}
 			return;
 		}
-		if (!file.endsWith('.svelte')) return;
+		if (change !== 'remount') return;
 
 		// Editors write in bursts; coalesce them.
 		clearTimeout(timer);

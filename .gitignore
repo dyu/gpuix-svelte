@@ -1,10 +1,16 @@
 # dependencies
 node_modules
 
+# a Bun canary kept beside the repo for `--aot` / `--trim` builds, see CLAUDE.md
+.bun-canary
+
 
 # test:coverage working copy of svelte's sample suite
 test/.samples-tmp
 test/.hot-tmp
+test/.bundle-tmp
+test/.dom-tmp
+test/.ui-tmp
 
 # compiled on demand by examples/liquid-glass-ffi/glass.ts
 examples/liquid-glass-ffi/.glass-shim.dylib
@@ -17,10 +23,11 @@ starter/bun.lock
 out
 dist
 
-# the JS and declarations scripts/publish.ts emits for the tarball, and the scaffolder's copy of starter/
+# the JS and declarations scripts/publish.ts and scripts/publish-ui.ts emit for the tarballs, and the scaffolder's copy of starter/
 lib
 packages/create-gpuix-svelte/template
 packages/create-gpuix-svelte/LICENSE
+packages/ui/LICENSE
 *.tgz
 
 # code coverage
@@ -49,6 +56,10 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# Apple's wallpapers, which may not be republished: `npm run wallpapers` rebuilds both locally
+/wallpapers
+/homepage/assets/wall/library
 
 # the custom-renderer svelte build, see CLAUDE.md
 !vendor/*.tgz

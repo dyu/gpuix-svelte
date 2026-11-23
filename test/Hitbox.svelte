@@ -4,6 +4,7 @@
 
 	let clicks = $state({ card: 0, button: 0 });
 	let tone = $state('red');
+	let nudge = $state(0);
 </script>
 
 <div class="page">
@@ -17,19 +18,23 @@
 		<div class="focusable" tabindex="0" testId="focusable">focusable</div>
 		<div class="scroller" testId="scroller"><div class="tall">tall</div></div>
 		<div class="scroller auto" testId="auto-scroller"><div class="tall">tall</div></div>
+		<div class="box both" testId="both-scroller"><div class="tall">tall</div></div>
+		<div class="box sideways" testId="x-scroller"><div class="tall">tall</div></div>
 	</div>
 
-	<div class="parent {tone}" testId="parent">
+	<div class="parent {tone}" style:padding-left="{nudge}px" testId="parent">
 		<svg source={ICON} class="icon" testId="icon"></svg>
 		<svg source={ICON} class="icon own" testId="own"></svg>
 	</div>
 	<div class="toggle" onclick={() => (tone = 'green')} testId="toggle">toggle</div>
+	<div class="toggle" onclick={() => nudge++} testId="nudge">nudge</div>
+	<div class="toggle" onclick={() => (tone = 'none')} testId="uncolor">uncolor</div>
 
 	<div testId="counts">{clicks.card}-{clicks.button}</div>
 </div>
 
 <style>
-	.page { display: flex; flex-direction: column; gap: 8px; padding: 8px; }
+	.page { display: flex; flex-direction: column; gap: 8px; padding: 8px; color: purple; }
 	.card { display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 8px; background-color: #333333; }
 	.badge { padding: 4px 8px; background-color: #555555; }
 	.pic { width: 20px; height: 20px; }
@@ -38,6 +43,9 @@
 	.focusable { padding: 4px; background-color: #444444; }
 	.scroller { height: 30px; width: 60px; overflow-y: scroll; }
 	.scroller.auto { overflow-y: auto; }
+	.box { position: absolute; top: 0; right: 0; height: 30px; width: 20px; }
+	.box.both { overflow: scroll; }
+	.box.sideways { overflow-x: scroll; }
 	.tall { height: 100px; }
 	.parent { display: flex; flex-direction: row; gap: 8px; }
 	.parent.red { color: red; }

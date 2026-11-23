@@ -1,8 +1,5 @@
 <script lang="ts">
-	import { set_css_vars } from 'gpuix-svelte';
 	import Scroller from 'gpuix-svelte/components/Scroller.svelte';
-
-	set_css_vars({ accent: '#f9e2af' });
 
 	type Case = { css?: string; kind?: string; label?: string; note: string; hover?: string; active?: string; bare?: boolean };
 
@@ -11,10 +8,10 @@
 	const SECTIONS: Array<{ title: string; color: string; cases: Case[] }> = [
 		{
 			title: 'Reads like CSS',
-			color: '#a6e3a1',
+			color: '#4cc38a',
 			cases: [
 				{
-					css: 'padding: 6px 18px; border-radius: 10px; background-color: #89b4fa; color: #1e1e2e',
+					css: 'padding: 6px 18px; border-radius: 10px; background-color: #ff3e00; color: #ffffff',
 					note: 'box shorthands expand to the four GPUI longhands'
 				},
 				{
@@ -23,8 +20,8 @@
 					note: 'class rules are compiled into a GPUI style; hover the chip'
 				},
 				{
-					css: 'padding: 6px 18px; border-radius: 10px; background-color: var(--accent); color: var(--ink, #1e1e2e)',
-					note: 'var() resolves against set_css_vars({ accent }) at runtime; --ink is unset, so its fallback paints'
+					css: 'padding: 6px 18px; border-radius: 10px; background-color: var(--accent); color: var(--ink, #ffffff)',
+					note: 'var() resolves at runtime against the :root rule in the style block; --ink is unset, so its fallback paints'
 				},
 				{
 					css: 'background-color: rebeccapurple; color: hsl(50 90% 70%)',
@@ -35,8 +32,8 @@
 					note: 'flex-grow fills the row; font-weight takes numbers or names'
 				},
 				{
-					css: 'border-width: 2px; border-color: #f9e2af; border-radius: 6px',
-					note: 'longhands only — there is no border-style'
+					css: 'border-width: 2px; border-style: dashed; border-color: #f5a524; border-radius: 6px',
+					note: 'longhands; border-style takes solid or dashed'
 				},
 				{
 					css: 'width: 50%; opacity: 0.4',
@@ -63,14 +60,14 @@
 		},
 		{
 			title: 'Looks like CSS, but is not',
-			color: '#f38ba8',
+			color: '#ff6166',
 			cases: [
 				{
 					css: 'flex: 1',
 					note: 'unknown key, dropped silently — the box never grows'
 				},
 				{
-					css: 'border: 1px solid #f9e2af',
+					css: 'border: 1px solid #f5a524',
 					note: 'shorthand dropped with a warning; nothing is drawn'
 				},
 				{
@@ -97,7 +94,7 @@
 				},
 				{
 					bare: true,
-					css: 'background: linear-gradient(90deg, #89b4fa, #f38ba8)',
+					css: 'background: linear-gradient(90deg, #ff3e00, #ff6166)',
 					note: 'parsed as a colour and fails; gradients are object-only'
 				},
 				{
@@ -108,7 +105,7 @@
 		},
 		{
 			title: 'Not CSS, but GPUI takes it',
-			color: '#f9e2af',
+			color: '#f5a524',
 			cases: [
 				{
 					css: 'padding: 12; font-size: 18; border-radius: 6',
@@ -135,21 +132,21 @@
 				},
 				{
 					css: 'cursor: pointer',
-					hover: 'background-color: #45475a',
-					active: 'background-color: #7f849c',
+					hover: 'background-color: #262626',
+					active: 'background-color: #404040',
 					note: 'hover= and active= are attributes, not :pseudo-classes'
 				},
 				{
-					css: 'cursor: grab; selection-color: #f38ba8',
+					css: 'cursor: grab; selection-color: #ff3e00',
 					note: 'drag-select the text: the wash colour has no CSS equivalent'
 				}
 			]
 		}
 	];
 
-	const BASE = 'padding: 8px 12px; color: #cdd6f4';
-	const FILL = 'background-color: #313244';
-	const BLOCKS = ['#89b4fa', '#f38ba8', '#a6e3a1', '#f9e2af', '#cba6f7', '#94e2d5'];
+	const BASE = 'padding: 8px 12px; color: #ededed';
+	const FILL = 'background-color: #1c1c1c';
+	const BLOCKS = ['#ff3e00', '#4cc38a', '#f5a524', '#ff6166', '#52a8ff', '#a78bfa'];
 	const LONG = 'The quick brown fox jumps over the lazy dog and keeps running well past the edge of this box';
 
 	// Inline wins over a class, so the class case must not carry the base inline.
@@ -160,23 +157,23 @@
 
 </script>
 
-<div style="display: flex; flex-direction: row; gap: 16px; width: 100%; height: 100%; background-color: #11111b; padding: 16px">
+<div style="display: flex; flex-direction: row; gap: 16px; width: 100%; height: 100%; background-color: #000000; padding: 16px">
 	{#each SECTIONS as section (section.title)}
 		<Scroller gap={8}>
-			<div style="font-size: 14px; font-weight: bold" style:color={section.color}>
+			<div style="font-size: 14px; font-weight: 600" style:color={section.color}>
 				{section.title}
 			</div>
 
 			{#each section.cases as c (c)}
 				<div
 					style="display: flex; flex-direction: column; gap: 6px; padding: 10px;
-					       background-color: #1e1e2e; border-radius: 8px"
+					       background-color: #111111; border-width: 1px; border-color: #242424; border-radius: 10px"
 				>
-					<div style="font-family: Menlo; font-size: 11px; color: #cba6f7">{c.label ?? c.css}</div>
+					<div style="font-family: Menlo; font-size: 11px; color: #ededed">{c.label ?? c.css}</div>
 
 					<div
 						style="display: flex; flex-direction: row; width: 100%; padding: 4px;
-						       background-color: #181825; border-radius: 4px"
+						       background-color: #000000; border-width: 1px; border-color: #242424; border-radius: 6px"
 					>
 						<div
 							class={c.kind === 'class' ? 'chip' : null}
@@ -196,7 +193,7 @@
 						</div>
 					</div>
 
-					<div style="font-size: 11px; color: #6c7086">{c.note}</div>
+					<div style="font-size: 11px; color: #a1a1a1">{c.note}</div>
 				</div>
 			{/each}
 		</Scroller>
@@ -204,15 +201,20 @@
 </div>
 
 <style>
+	:root {
+		--accent: #ff3e00;
+		--scroller-thumb: #404040;
+		--scroller-thumb-hover: #5a5a5a;
+	}
 	.chip {
-		background-color: #cba6f7;
-		color: #1e1e2e;
+		background-color: #ff3e00;
+		color: #ffffff;
 		border-radius: 999px;
 		padding: 6px 14px;
-		font-weight: bold;
+		font-weight: 600;
 		cursor: pointer;
 	}
 	.chip:hover {
-		background-color: #f5c2e7;
+		background-color: #ff6a33;
 	}
 </style>

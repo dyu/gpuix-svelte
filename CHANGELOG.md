@@ -1,5 +1,62 @@
 # Changelog
 
+## [0.6.0](https://github.com/khromov/gpuix-svelte/compare/v0.5.0...v0.6.0) (2026-11-18)
+
+
+### Features
+
+* a UI toolkit for both renderers, and [@media](https://github.com/media) and :root variables in a GPUI window ([#71](https://github.com/khromov/gpuix-svelte/issues/71)) ([c4c5bce](https://github.com/khromov/gpuix-svelte/commit/c4c5bcef401ed0e6337115df4197f075e18ee678))
+* async route guards, rest params and base paths in the UI router ([#82](https://github.com/khromov/gpuix-svelte/issues/82)) ([545895d](https://github.com/khromov/gpuix-svelte/commit/545895d63b63303727460d1d164ebd0d3b2741c9))
+* build smaller executables with Bun's experimental aot and trim options ([#73](https://github.com/khromov/gpuix-svelte/issues/73)) ([31868bf](https://github.com/khromov/gpuix-svelte/commit/31868bfae9ad3f4d619d895bb572124c1305f3d9))
+* override a CSS variable for one element or component, as in a browser ([#81](https://github.com/khromov/gpuix-svelte/issues/81)) ([b6d957c](https://github.com/khromov/gpuix-svelte/commit/b6d957c0053d72f55a54c3c77059ace197b9fddf))
+* render gpuix-svelte components in a browser DOM too ([#68](https://github.com/khromov/gpuix-svelte/issues/68)) ([090c891](https://github.com/khromov/gpuix-svelte/commit/090c891c8820d39429808d8f4a956fcef58d62e2))
+* static boolean and number props reach GPUI, Escape closes only the top overlay, and more from a review against @gpuix/native ([#76](https://github.com/khromov/gpuix-svelte/issues/76)) ([fd768e5](https://github.com/khromov/gpuix-svelte/commit/fd768e5a392675808245558b997ee8965c0c8a08))
+* try components in a playground on the docs site, and draw wrapped text as HTML does ([#75](https://github.com/khromov/gpuix-svelte/issues/75)) ([4742d68](https://github.com/khromov/gpuix-svelte/commit/4742d68ebcf09f4a0a741f53983b4b4b845342ea))
+
+
+### Bug Fixes
+
+* keep text in order when an element moves past it ([#83](https://github.com/khromov/gpuix-svelte/issues/83)) ([d8a0d42](https://github.com/khromov/gpuix-svelte/commit/d8a0d42bfc8a35ca59cb52cfc95c2ca56d325ec8))
+* keep the custom-renderer conditions when Bun runs the bin as `node` ([#77](https://github.com/khromov/gpuix-svelte/issues/77)) ([e3517c6](https://github.com/khromov/gpuix-svelte/commit/e3517c6e556a59927f03ea35478af4caf2ef2955))
+* let screen readers hear plain text, and open tooltips on keyboard focus ([#74](https://github.com/khromov/gpuix-svelte/issues/74)) ([c72dbdd](https://github.com/khromov/gpuix-svelte/commit/c72dbdd0382c5629bd913313115b3f1c2f9878af))
+* show a bare component in the playground, and build its GPUI frame without warnings ([a2d585e](https://github.com/khromov/gpuix-svelte/commit/a2d585e6d76523f5f05368ab1e6a7fe706293189))
+
+## [0.5.0](https://github.com/khromov/gpuix-svelte/compare/v0.4.1...v0.5.0) (2026-11-06)
+
+
+### Features
+
+* in-app updates from a static manifest, a GitHub release workflow, and a docs pass ([#61](https://github.com/khromov/gpuix-svelte/issues/61)) ([bb82508](https://github.com/khromov/gpuix-svelte/commit/bb82508a536c59d258a9fa30b275e8a80526b221))
+
+
+### Bug Fixes
+
+* keep the relaunch handshake intact, idempotent window unsubscribes, and six more from a bug triage ([#65](https://github.com/khromov/gpuix-svelte/issues/65)) ([3ccca2f](https://github.com/khromov/gpuix-svelte/commit/3ccca2f96b8b7518fa240ef8104753a6a348a5b4))
+* make the tests fail when what they name breaks, and two install() bugs that turned up ([#64](https://github.com/khromov/gpuix-svelte/issues/64)) ([c4f2935](https://github.com/khromov/gpuix-svelte/commit/c4f293568fe173fb9d0da0fd83da7c442480786f))
+* roll back updates that cannot execute, survive refused style ops, and stop resending svg colours ([#63](https://github.com/khromov/gpuix-svelte/issues/63)) ([ba5cfb2](https://github.com/khromov/gpuix-svelte/commit/ba5cfb24ed2448a3a5fbd5804086096070107b7a))
+
+## [0.4.1](https://github.com/khromov/gpuix-svelte/compare/v0.4.0...v0.4.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* publishing issue ([ff40020](https://github.com/khromov/gpuix-svelte/commit/ff4002001d50aef1cca5a68334f86f1be3596d65))
+
+## [0.4.0](https://github.com/khromov/gpuix-svelte/compare/v0.3.0...v0.4.0) (2026-10-31)
+
+
+### Features
+
+* build a real app per platform, with its metadata in render() ([#53](https://github.com/khromov/gpuix-svelte/issues/53)) ([9e1626e](https://github.com/khromov/gpuix-svelte/commit/9e1626e76a9050fd76b4d5f089bd1560ea8c4221))
+
+
+### Bug Fixes
+
+* gitignore .env in scaffolded apps ([0dffa53](https://github.com/khromov/gpuix-svelte/commit/0dffa537fe30d2c171533e6fda573cd60479ae17))
+* render &lt;canvas&gt; as a div, since native 0.11 has no canvas element ([8ccd5ae](https://github.com/khromov/gpuix-svelte/commit/8ccd5ae8473985f49093bf7e004961f65264e72f))
+* survive a native file picker on Windows and stop Scroller's idle redraws ([#55](https://github.com/khromov/gpuix-svelte/issues/55)) ([3dba6d6](https://github.com/khromov/gpuix-svelte/commit/3dba6d6f241bacbfdd8f89ca2c271da12a165661))
+* update AGENTS.md ([ff75998](https://github.com/khromov/gpuix-svelte/commit/ff759982d04ecff7a393fee1acb95baa8dd63ae8))
+
 ## [0.3.0](https://github.com/khromov/gpuix-svelte/compare/v0.2.0...v0.3.0) (2026-10-26)
 
 

@@ -1,7 +1,11 @@
 /**
  * The `browser` condition's entry: everything `index.ts` has except `render_hot`,
- * whose `node:fs` watch cannot resolve in a browser bundle.
+ * whose `node:fs` watch cannot resolve in a browser bundle. `dom.ts` mirrors this
+ * list for builds without the `custom-renderer` condition.
  */
+
+/** True on GPUI, native window or wasm canvas alike; `dom.ts` answers false. Decided per build, so it can be read before anything is mounted. */
+export const IS_GPUIX: boolean = true;
 
 export { render } from './render.ts';
 export {
@@ -16,8 +20,10 @@ export {
 	set_css_vars,
 	set_keyboard_focus_dim,
 	on_window_key,
-	on_selection_change
+	on_selection_change,
+	dismiss_layer
 } from './renderer.ts';
+export { dismiss_scope } from './layers.ts';
 export { parse_css_text, build_style } from './style.ts';
 export { to_gpui_event, GPUI_EVENTS } from './events.ts';
 export {
@@ -27,6 +33,7 @@ export {
 	zoom_window,
 	toggle_fullscreen,
 	prompt_for_paths,
+	read_native,
 	blur,
 	focus_element,
 	focused_element,
@@ -38,9 +45,13 @@ export {
 	set_image,
 	set_image_pixels,
 	register_font,
-	elements_at
+	elements_at,
+	selected_text,
+	clear_selection
 } from './window.ts';
-export { TextSearch, find_ranges, type TextSearchOptions } from './search.ts';
+/** Whether native 0.11's terminal mode draws the app inside the terminal, where there is no title bar; false until `render()` opened the window. */
+export { isTerminal as is_terminal } from '@gpuix/native';
+export { TextSearch, find_ranges, type TextSearchOptions, type SearchMatches } from './search.ts';
 export type {
 	ShadowNode,
 	ShadowAttrs,
@@ -55,7 +66,10 @@ export type {
 	NativeSink,
 	Native,
 	RenderOptions,
+	AppOptions,
 	WindowKeyType,
+	DismissLayer,
+	DismissScope,
 	PixelFormat,
 	AnyComponent
 } from './types.ts';
@@ -68,5 +82,6 @@ export {
 	reset_debug_overlay_stats
 } from './window.ts';
 export type { DebugFrameOverlayMode, DebugFrameOverlayStats } from '@gpuix/native/host';
-export { window_size, window_insets } from './window.ts';
+export { window_size, window_insets, media_query } from './window.ts';
 export type { WindowSize, WindowInsets, EdgeInsets } from '@gpuix/native/host';
+export type { MediaQueryState } from './types.ts';

@@ -9,7 +9,7 @@ import { renderer, set_native, create_root, commit } from 'gpuix-svelte';
 import { mount_headless, find_test_id, click_test_id, all_text, check, finish } from 'gpuix-svelte/test';
 
 const Hitbox = (await import('./Hitbox.svelte')).default;
-mount_headless(Hitbox, { width: 400, height: 300 });
+const { native: hit_native } = mount_headless(Hitbox, { width: 400, height: 300 });
 
 const pe = (id: string) => find_test_id(id)!.style?.pointerEvents ?? null;
 const counts = () => all_text().find((t) => /^\d+-\d+$/.test(t));
@@ -20,7 +20,7 @@ check('a child with its own listener keeps its hitbox', pe('button'), null);
 check("while that child's decoration loses it", pe('inner'), 'none');
 check('an <input> keeps it', pe('field'), null);
 check('so does a painted element that is merely focusable', pe('focusable'), null);
-check('a scroll container keeps it', pe('scroller'), null);
+check('a scroll container keeps it, on either axis or both', [pe('scroller'), pe('x-scroller'), pe('both-scroller')], [null, null, null]);
 check('one written overflow-y: auto too', pe('auto-scroller'), null);
 
 click_test_id('badge');
@@ -33,6 +33,20 @@ check('one with its own keeps it', find_test_id('own')!.style!.color, 'blue');
 click_test_id('toggle');
 check("restyling the ancestor restyles the svg", find_test_id('icon')!.style!.color, 'green');
 check('and still leaves the other alone', find_test_id('own')!.style!.color, 'blue');
+{
+	const icon = find_test_id('icon')!.id;
+	let resent = 0;
+	const apply = hit_native.applyBatch.bind(hit_native);
+	hit_native.applyBatch = (json) => {
+		if ((JSON.parse(json) as [string, number][]).some(([op, id]) => op === 'setStyle' && id === icon)) resent++;
+		return apply(json);
+	};
+	click_test_id('nudge');
+	check("a restyle that leaves the ancestor's colour alone sends the svg nothing", resent, 0);
+	click_test_id('uncolor');
+	check('with the nearest colour gone it takes the next one up', [resent, find_test_id('icon')!.style!.color], [1, 'purple']);
+	hit_native.applyBatch = apply;
+}
 
 // --- the attribute and listeners can change after the fact ------------------
 {
@@ -48,6 +62,13 @@ check('and still leaves the other alone', find_test_id('own')!.style!.color, 'bl
 	renderer.setAttribute(badge, 'style', 'background-color: #555555');
 	renderer.insert(card, badge, null);
 	renderer.insert(root, card, anchor);
+	// A div drops every prop it has no use for, so only a tag that forwards them can show one reaching native.
+	const before_live = renderer.createElement('input');
+	renderer.setAttribute(before_live, 'placeholder', 'forwarded');
+	renderer.setAttribute(before_live, 'hitbox', 'self');
+	renderer.insert(root, before_live, anchor);
+	const after_live = renderer.createElement('input');
+	renderer.insert(root, after_live, anchor);
 	commit();
 	native.flush();
 
@@ -55,10 +76,11 @@ check('and still leaves the other alone', find_test_id('own')!.style!.color, 'bl
 	check('without the attribute nothing changes', badge_pe(), null);
 
 	renderer.setAttribute(card, 'hitbox', 'self');
+	renderer.setAttribute(after_live, 'hitbox', 'self');
 	commit();
 	native.flush();
 	check('setting hitbox="self" later restyles the subtree', badge_pe(), 'none');
-	check('and never reaches native as a prop', native.getTreeJson().includes('hitbox'), false);
+	check('and never reaches native as a prop', [native.getTreeJson().includes('forwarded'), native.getTreeJson().includes('hitbox')], [true, false]);
 
 	const handler = () => {};
 	renderer.addEventListener(badge, 'click', handler);
@@ -83,4 +105,4 @@ check('and still leaves the other alone', find_test_id('own')!.style!.color, 'bl
 	check('removing the attribute restores the default', badge_pe(), null);
 }
 
-finish('hitbox', 21);
+finish('hitbox', 23);

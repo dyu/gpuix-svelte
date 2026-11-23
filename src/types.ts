@@ -30,8 +30,18 @@ export interface ShadowNode {
 	listeners: Map<string, EventHandler[]>;
 	/** Allocated lazily, when the node first becomes reachable from the root. */
 	nativeId: number | null;
-	/** Its style read a `var()`, so `set_css_vars` has to restyle it. */
+	/** The inner native node holding a text node's string, when `nativeId` is the `text` around it. */
+	textId: number | null;
+	/** The element Svelte itself put around a component given style props: it has no native node, and its children are natively its parent's. */
+	boxless: boolean;
+	/** The custom properties its rules and inline style declare, named without the `--`: what it and everything inside it read ahead of the `:root` ones. */
+	vars: ReadonlyMap<string, string> | null;
+	/** Its style read a `var()`, so a change to the variables has to restyle it. */
 	uses_vars: boolean;
+	/** One of its rules sits under an `@media` query, so a window resize has to restyle it. */
+	uses_media: boolean;
+	/** Its resolved `color`, so a restyle that leaves it alone need not visit the `<svg>`s inheriting it. */
+	own_color: GpuiStyle[string];
 	/** Reachable from the designated GPUI root. */
 	live: boolean;
 	/** Currently appended to its native parent. */
@@ -60,15 +70,35 @@ export type Pseudo = 'hover' | 'active' | 'focusVisible' | null;
 
 /**
  * One `<style>` rule's declarations. A block that reads a `var()` ships as CSS text
- * and is re-parsed per `set_css_vars()` generation; the rest is parsed at compile time.
+ * and is re-parsed whenever the variables change; the rest is parsed at compile time.
+ * `vars` are the custom properties the rule declares, named without the `--`, and `unset` the
+ * ones the parse kept in `resolved` read and found no value for.
  */
-export type StyleRule = { pseudo: Pseudo } & (
+export type StyleRule = { pseudo: Pseudo; vars?: Record<string, string> } & (
 	| { style: GpuiStyle; css?: undefined }
-	| { css: string; style?: undefined; generation?: number; resolved?: GpuiStyle }
+	| { css: string; style?: undefined; generation?: number; resolved?: GpuiStyle; unset?: string[] }
 );
 
-/** A `StyleRule` with the selector `compile.ts` accepted: classes and at most one tag. */
-export type ClassRule = StyleRule & { classes: string[]; tag: string | null };
+/**
+ * A `StyleRule` with the selector `compile.ts` accepted: classes and at most one tag. `media` holds the
+ * `@media` preludes the rule sits under, outermost first, every one of which has to hold for it to apply.
+ */
+export type ClassRule = StyleRule & { classes: string[]; tag: string | null; media?: string[] };
+
+/**
+ * One `:root` rule's custom properties, named without the `--`. `important` holds the ones declared
+ * `!important`, which outrank `set_css_vars()` as they outrank an inline style in a browser; `media` is a `ClassRule`'s.
+ */
+export interface RootRule {
+	vars: Record<string, string>;
+	important?: Record<string, string>;
+	media?: string[];
+}
+
+/** What `media_query()` returns: `current` is reactive wherever a template or effect reads it. */
+export interface MediaQueryState {
+	readonly current: boolean;
+}
 
 /** One entry of the batch `applyBatch` receives. */
 export type Mutation =
@@ -100,10 +130,22 @@ export interface GpuixEvent extends EventPayload {
 
 export type WindowKeyType = 'keydown' | 'keyup';
 
+/** One open overlay on the window's stack: a popover, a menu, a tooltip or a modal. */
+export interface DismissLayer {
+	/** Escape reached the window, no key handler called `preventDefault()`, and this is the top layer. */
+	onEscape: () => void;
+	/** From `dismiss_scope()`, so a layer opened in the same commit as one mounted inside it goes under that one. */
+	scope?: DismissScope;
+}
+
+/** Where an overlay sits among the ones mounted inside it; opaque. */
+export interface DismissScope {
+	readonly parent: DismissScope | null;
+}
+
 /** The least the renderer needs from a native: `test/lifecycle.ts` hands in a stub this small. */
 export interface NativeSink {
 	applyBatch(json: string): number[];
-	commitMutations?(): void;
 	setWindowKeyEvents?(keyDown: boolean, keyUp: boolean, eventId: number): void;
 	setWindowSelectionChange?(enabled: boolean, eventId: number): void;
 }
@@ -129,6 +171,8 @@ export type WindowNative = Partial<
 		| 'focusNextWithin'
 		| 'focusPreviousWithin'
 		| 'getElementsAt'
+		| 'getSelectedText'
+		| 'clearSelection'
 	>
 > & {
 	// napi's `Buffer` parameters take any Uint8Array, and the wasm build declares Uint8Array.
@@ -148,8 +192,39 @@ export type WindowNative = Partial<
 	>
 >;
 
+/**
+ * What `gpuix-svelte/build` packages the executable with: the `.app` bundle on macOS, the
+ * version info on Windows. At runtime `name` is the window title's fallback and the name in macOS's
+ * Hide and Quit menu items, and `identifier` the app id Linux desktops see; nothing else is read.
+ */
+export interface AppOptions {
+	/** The Dock, menu bar and bundle name; defaults to the window `title`. */
+	name?: string;
+	/** Reverse-DNS identifier (`com.example.app`): what signing and macOS's per-app state key on, and on Linux the window's `appId` unless one is given. */
+	identifier?: string;
+	/** Defaults to the version of the nearest package.json above the entry. */
+	version?: string;
+	/** A square PNG, 1024 px for macOS; a relative path is read from the entry file's directory. Defaults to the gpuix-svelte icon. */
+	icon?: string | URL;
+	copyright?: string;
+	/** Windows file properties only. */
+	publisher?: string;
+	description?: string;
+	/** Where `gpuix-svelte/update` looks for a newer version; the build bakes it into the executable. */
+	update?: AppUpdateOptions;
+}
+
+export interface AppUpdateOptions {
+	/** URL of the update manifest, `https://github.com/<owner>/<repo>/releases/latest/download/update.json` on GitHub. */
+	manifest: string;
+	/** Base64 ed25519 public key from `gpuix-svelte update keygen`; set, every manifest has to carry a valid signature. */
+	publicKey?: string;
+}
+
 export interface RenderOptions extends WindowOptions {
 	props?: Record<string, unknown>;
+	/** Read by `gpuix-svelte/build`; the window takes only its title fallback, macOS menu name and app id from it. See `AppOptions`. */
+	app?: AppOptions;
 	rootStyle?: GpuiStyle;
 	onEvent?: (event: EventPayload) => void;
 	/** `on_window_key` handlers kept across remounts. */

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { get_native, on_window_key, type GpuixEvent, type ShadowNode } from 'gpuix-svelte';
+	import { dismiss_layer, dismiss_scope, read_native, type GpuixEvent, type ShadowNode } from 'gpuix-svelte';
 
 	type Side = 'top' | 'right' | 'bottom' | 'left';
 	type Align = 'start' | 'center' | 'end';
@@ -45,10 +45,12 @@
 	const y = $derived(side === 'top' ? 'start' : side === 'bottom' ? 'end' : align);
 
 	let anchor: ShadowNode | null = null;
+	const scope = dismiss_scope();
 
 	// The trigger's own click closes it, and closing here first would let that click reopen it.
 	function outside(e: GpuixEvent) {
-		const box = anchor?.nativeId == null ? null : get_native()?.getElementBounds(anchor.nativeId);
+		const id = anchor?.nativeId;
+		const box = id == null ? null : read_native((native) => native.getElementBounds(id));
 		const px = e.x ?? -1;
 		const py = e.y ?? -1;
 		if (box && px >= box.x && px <= box.x + box.width && py >= box.y && py <= box.y + box.height) return;
@@ -57,9 +59,8 @@
 
 	$effect(() => {
 		if (!open) return;
-		return on_window_key('keydown', (e) => {
-			if (e.key === 'escape') onclose();
-		});
+		// Read on Escape, not here, or a parent passing a new closure would re-push the layer on top.
+		return dismiss_layer({ onEscape: () => onclose(), scope });
 	});
 </script>
 
@@ -92,8 +93,8 @@
 		padding: 4px;
 		border-radius: 8px;
 		border-width: 1px;
-		border-color: var(--popover-border, #45475a);
-		background-color: var(--popover-surface, #1e1e2e);
-		color: var(--popover-ink, #cdd6f4);
+		border-color: var(--popover-border, #404040);
+		background-color: var(--popover-surface, #111111);
+		color: var(--popover-ink, #ededed);
 	}
 </style>

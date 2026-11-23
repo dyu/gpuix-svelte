@@ -6,5 +6,12 @@ import TicTacToe from './TicTacToe.svelte';
 render(TicTacToe, {
 	title: 'GPUIX + Svelte — Tic-tac-toe',
 	width: 480,
-	height: 640
+	height: 640,
+	// What `npm run compile` (gpuix-svelte/build) packages the executable as; the window takes only its Linux app id from it.
+	app: {
+		name: 'Tic-tac-toe',
+		identifier: 'dev.gpuix.svelte.tictactoe',
+		// Every gpuix-svelte release uploads this app for each platform and this manifest with it.
+		update: { manifest: 'https://github.com/khromov/gpuix-svelte/releases/latest/download/update.json' }
+	}
 });

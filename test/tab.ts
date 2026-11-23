@@ -6,7 +6,7 @@
  */
 
 import { focused_element } from 'gpuix-svelte';
-import { mount_headless, find, find_test_id, all_text, focus, press, check, finish } from 'gpuix-svelte/test';
+import { mount_headless, find, find_test_id, all_text, text_content, focus, press, check, finish } from 'gpuix-svelte/test';
 
 const Tab = (await import('./Tab.svelte')).default;
 const { unmount } = mount_headless(Tab);
@@ -17,7 +17,7 @@ const id = (testid: string) => find_test_id(testid)!.id;
 let seen = 0;
 /** The log entries since the last call. */
 function fresh() {
-	const text = find_test_id('log')!.children?.[0]?.text ?? '';
+	const text = text_content(find_test_id('log')!);
 	const all = text ? text.split(' ') : [];
 	const out = all.slice(seen).join(' ');
 	seen = all.length;
@@ -45,13 +45,24 @@ press('y');
 check('without it a key reaches the ancestor and then the window', fresh(), 'child:y parent:y window:y');
 
 press('ctrl-tab');
-check('a modified Tab is left alone', at(), id('child'));
+const after_ctrl = at();
+press('alt-tab');
+const after_alt = at();
+press('cmd-tab');
+check('a modified Tab is left alone', [after_ctrl, after_alt, at()], [id('child'), id('child'), id('child')]);
 
 unmount();
-const untabbed = mount_headless(Tab, { tabNavigation: false });
+const quiet = mount_headless(Tab, { props: { listen: false } });
 focus(find_test_id('field')!);
 press('tab');
-check('tabNavigation: false leaves Tab to the app', at(), id('field'));
+check('Tab moves focus with no window key handler subscribed', at(), id('trap'));
+
+quiet.unmount();
+const untabbed = mount_headless(Tab, { tabNavigation: false });
+focus(find_test_id('field')!);
+seen = 0;
+press('tab');
+check('tabNavigation: false leaves Tab to the app', [at(), fresh()], [id('field'), 'window:tab']);
 
 // The native-0.11 demo can't be driven from a window in CI, so walk its first stops here.
 untabbed.unmount();
@@ -63,4 +74,4 @@ press('tab');
 const two = find((n) => n.id === at());
 check('and its :focus-visible rule reaches GPUI', [all_text().includes('focused: Two'), two?.style?.focusVisible?.outlineWidth], [true, 2]);
 
-finish('tab', 10);
+finish('tab', 11);
